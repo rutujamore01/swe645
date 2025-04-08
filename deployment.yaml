@@ -1,0 +1,30 @@
+# Rutuja More
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swe645-deployment
+  labels:
+    app: swe645
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swe645
+  template:
+    metadata:
+      labels:
+        app: swe645
+    spec:
+      containers:
+        - name: swe645-container
+          image: rutujadocker09/swe645:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://swe645-mysql-db.cubv3qi9xp5s.us-east-1.rds.amazonaws.com:3306/swe645db
+            - name: SPRING_DATASOURCE_USERNAME
+              value: admin
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: swe645admin

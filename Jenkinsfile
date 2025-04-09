@@ -22,7 +22,7 @@ pipeline {
                     dir('swe645') {
                         def mvnHome = tool 'Maven' // Use Maven installed in Jenkins
                         sh """
-                            export JAVA_HOME=\$(/usr/libexec/java_home)
+                            export JAVA_HOME=/opt/homebrew/opt/openjdk@23
                             export PATH=\$JAVA_HOME/bin:\$PATH
                             ${mvnHome}/bin/mvn clean package -DskipTests
                         """

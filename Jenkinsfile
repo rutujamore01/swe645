@@ -22,7 +22,7 @@ pipeline {
                 script {
                     dir('swe645') {
                         def mvnHome = tool 'Maven' // Use Maven installed in Jenkins
-                        bat "${mvnHome}/bin/mvn clean package -DskipTests"
+                        sh "${mvnHome}/bin/mvn clean package -DskipTests"
                     }
                 }
             }
@@ -30,7 +30,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                 }
             }
         }
@@ -40,9 +40,9 @@ pipeline {
                     withCredentials([
                         usernamePassword(credentialsId: 'rutujadocker09', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASS')
                     ]) {
-                        bat "echo logging into Docker Hub..."
-                        bat "echo | set /p=\"%DOCKER_PASS%\" | docker login --username %DOCKER_USERNAME% --password-stdin"
-                        bat "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        sh "echo logging into Docker Hub..."
+                        sh "echo | set /p=\"%DOCKER_PASS%\" | docker login --username %DOCKER_USERNAME% --password-stdin"
+                        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
                     }
                 }
             }
@@ -51,10 +51,10 @@ pipeline {
             steps {
                 // Using the Kubeconfig to update the Kubernetes deployment
                 // bat "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
-                bat "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"${KUBECONFIG_PATH}\""
+                sh "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"${KUBECONFIG_PATH}\""
                 // Restart the pods to reflect the new changes
                 // bat "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
-                bat "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"${KUBECONFIG_PATH}\""
+                sh "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"${KUBECONFIG_PATH}\""
             }
         }
     }

@@ -5,56 +5,58 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'rutujadocker09/swe645'
         DOCKER_TAG = 'latest'
-        // KUBECONFIG_PATH = 'C:\\Program Files\\Jenkins\\kubeconfig'
-        KUBECONFIG_PATH = '~/.kube/config'
+        KUBECONFIG_PATH = "${HOME}/.kube/config"
     }
     stages {
-         stage('Clone Repository') {
+        stage('Clone Repository') {
             steps {
-                // Clone the repository
                 git branch: 'main',
                     credentialsId: 'rutujamore01', 
                     url: 'https://github.com/rutujamore01/swe645.git'
             }
         }
+
         stage('Build JAR File') {
             steps {
                 script {
                     dir('swe645') {
                         def mvnHome = tool 'Maven' // Use Maven installed in Jenkins
-                        sh "${mvnHome}/bin/mvn clean package -DskipTests"
+                        sh """
+                            export JAVA_HOME=\$(/usr/libexec/java_home)
+                            export PATH=\$JAVA_HOME/bin:\$PATH
+                            ${mvnHome}/bin/mvn clean package -DskipTests
+                        """
                     }
                 }
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                }
+                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
             }
         }
+
         stage('Push to DockerHub') {
             steps {
-                script {
-                    withCredentials([
-                        usernamePassword(credentialsId: 'rutujadocker09', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASS')
-                    ]) {
-                        sh "echo logging into Docker Hub..."
-                        sh "echo | set /p=\"%DOCKER_PASS%\" | docker login --username %DOCKER_USERNAME% --password-stdin"
-                        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    }
+                withCredentials([
+                    usernamePassword(credentialsId: 'rutujadocker09', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASS')
+                ]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    '''
                 }
             }
         }
+
         stage('Deploy to EKS') {
             steps {
-                // Using the Kubeconfig to update the Kubernetes deployment
-                // bat "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
-                sh "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"${KUBECONFIG_PATH}\""
-                // Restart the pods to reflect the new changes
-                // bat "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
-                sh "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"${KUBECONFIG_PATH}\""
+                sh '''
+                    export KUBECONFIG=${KUBECONFIG_PATH}
+                    kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG}
+                    kubectl rollout restart deployment swe645-deployment
+                '''
             }
         }
     }

@@ -2,14 +2,13 @@
 
 pipeline {
     agent any
-
     environment {
         DOCKER_IMAGE = 'rutujadocker09/swe645'
         DOCKER_TAG = 'latest'
         KUBECONFIG_PATH = "${HOME}/.kube/config"
     }
-
     stages {
+
         stage('Clone Repository') {
             steps {
                 git branch: 'main',
@@ -37,12 +36,14 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                    export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
-                    echo "Docker Version:"
-                    docker --version
-                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                """
+                script {
+                    sh """
+                        export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
+                        echo "Docker Version:"
+                        docker --version
+                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    """
+                }
             }
         }
 
@@ -64,12 +65,16 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                sh """
-                    export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
-                    export KUBECONFIG=${KUBECONFIG_PATH}
-                    kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG}
-                    kubectl rollout restart deployment swe645-deployment
-                """
+                script {
+                    sh """
+                        export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
+                        export KUBECONFIG=${KUBECONFIG_PATH}
+                        echo "Kubernetes Version:"
+                        kubectl version --client=true
+                        kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG}
+                        kubectl rollout restart deployment swe645-deployment
+                    """
+                }
             }
         }
     }

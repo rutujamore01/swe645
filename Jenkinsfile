@@ -19,7 +19,7 @@ pipeline {
         stage('Build JAR File') {
             steps {
                 script {
-                    dir('swe645') {
+                    dir('SWE-645') {
                         def mvnHome = tool 'Maven' // Use Maven installed in Jenkins
                         sh """
                             export JAVA_HOME=/opt/homebrew/opt/openjdk@23

@@ -24,6 +24,8 @@ pipeline {
                         sh """
                             export JAVA_HOME=/opt/homebrew/opt/openjdk@23
                             export PATH=\$JAVA_HOME/bin:\$PATH
+                            echo "Java Version:"
+                            java -version
                             ${mvnHome}/bin/mvn clean package -DskipTests
                         """
                     }

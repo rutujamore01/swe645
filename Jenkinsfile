@@ -6,15 +6,15 @@ pipeline {
         DOCKER_IMAGE = 'rutujadocker09/swe645'
         DOCKER_TAG = 'latest'
         // KUBECONFIG_PATH = 'C:\\Program Files\\Jenkins\\kubeconfig'
-        KUBECONFIG_PATH = 'C:\\Users\\rudra\\.kube\\config'
+        KUBECONFIG_PATH = '~/.kube/config'
     }
     stages {
          stage('Clone Repository') {
             steps {
                 // Clone the repository
                 git branch: 'main',
-                    credentialsId: 'github-credentials', 
-                    url: 'https://github.com/rudra2807/swe645-assignment3.git'
+                    credentialsId: 'rutujamore01', 
+                    url: 'https://github.com/rutujamore01/swe645.git'
             }
         }
         stage('Build JAR File') {
@@ -38,7 +38,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([
-                        usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASS')
+                        usernamePassword(credentialsId: 'rutujadocker09', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASS')
                     ]) {
                         bat "echo logging into Docker Hub..."
                         bat "echo | set /p=\"%DOCKER_PASS%\" | docker login --username %DOCKER_USERNAME% --password-stdin"
@@ -50,11 +50,11 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 // Using the Kubeconfig to update the Kubernetes deployment
-                // bat "kubectl set image deployment/swe645-assignment3-deployment swe645-assignment3-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
-                bat "kubectl set image deployment/swe645-assignment3-deployment swe645-assignment3-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"${KUBECONFIG_PATH}\""
+                // bat "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
+                bat "kubectl set image deployment/swe645-deployment swe645-container=${DOCKER_IMAGE}:${DOCKER_TAG} --kubeconfig=\"${KUBECONFIG_PATH}\""
                 // Restart the pods to reflect the new changes
-                // bat "kubectl rollout restart deployment swe645-assignment3-deployment --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
-                bat "kubectl rollout restart deployment swe645-assignment3-deployment --kubeconfig=\"${KUBECONFIG_PATH}\""
+                // bat "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"C:\\Program Files\\Jenkins\\kubeconfig\""
+                bat "kubectl rollout restart deployment swe645-deployment --kubeconfig=\"${KUBECONFIG_PATH}\""
             }
         }
     }

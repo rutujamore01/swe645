@@ -56,8 +56,7 @@ pipeline {
                 )]) {
                     sh """
                         export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
-                        // echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USERNAME" --password-stdin
-                        echo "echo | set /p=\"%DOCKER_PASS%\" | docker login --username %DOCKER_USERNAME% --password-stdin"
+                        printf "%s" "\$DOCKER_PASS" | docker login -u "\$DOCKER_USERNAME" --password-stdin
                         docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                     """
                 }
